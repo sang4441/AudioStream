@@ -16,7 +16,7 @@ import android.widget.Button;
 public class MainActivity extends Activity {
 
 	private boolean isSendering;
-	private static int BUFFER_FRAME_SIZE = 160;
+	private static int BUFFER_FRAME_SIZE = 16000;
 	short[] lin = new short [BUFFER_FRAME_SIZE];
 	short[] inbuffer  = new short[64];
 	short[] outbuffer = new short[128];
@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
             			                 
             			 
             			Log.d("start", "record about to begin1");
-            			  lin = startRecording();
+            			lin = startRecording();
 
             			Log.d("start", "record about to begin2");
             			Log.d("start", "record about to begin3");       	  		
@@ -57,8 +57,15 @@ public class MainActivity extends Activity {
    
             			
 //            			Log.d("start",  "record about to begin3");
-//            	    	while (isSendering) {
-//            	    		Log.d("start", "record begin");	
+            	    	while (isSendering) {
+            	    		Log.d("start", "record begin");
+            	    		try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+            	    		setBuffer(getBuffer(), BUFFER_FRAME_SIZE);
 //            	    		
 ////            	    		for (int i = 0; i < 100; i++) {
 ////            	    			lin = startRecording();
@@ -92,7 +99,7 @@ public class MainActivity extends Activity {
 //            	    		  
 //            	    		 
 //            	    		Log.d("start", "buffer Done");
-//            			} 
+            			} 
             	    }
             	};
             	t.start();                 	

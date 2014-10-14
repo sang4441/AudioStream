@@ -205,9 +205,9 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 
 //    	bufferTmp = cbRead(&CB, &ET).value;
 
-    	ElemType ET;
-		if (!cbIsEmpty(&CB)) {
-			nextBuffer = cbRead(&CB, &ET);
+    	ElemType ET2;
+		if (!cbIsEmpty(&CB2)) {
+			nextBuffer = cbRead(&CB2, &ET2);
 			nextSize = RECORDER_FRAMES;
 		} else {
 			nextBuffer = (short *) hello;
@@ -698,23 +698,31 @@ JNIEXPORT jshortArray JNICALL Java_com_example_audiostream_MainActivity_startRec
 JNIEXPORT jshortArray JNICALL Java_com_example_audiostream_MainActivity_getBuffer
   (JNIEnv * env, jclass cls) {
 
-//	if (!cbIsEmpty(&CB)) {
-//		*bufferTmp = cbRead(&CB, &ET).value[RECORDER_FRAMES];
-//
-//	   return bufferTmp;
-//	        nextSize = RECORDER_FRAMES;
-//	}
-//	else {
-//		return short[]
-//	}
+	short emptyBuffer[RECORDER_FRAMES];
+	short recordedBuffer[RECORDER_FRAMES];
+	ElemType ET;
+
+	jshortArray ret = (*env)->NewShortArray(env, RECORDER_FRAMES);
+
+	if (!cbIsEmpty(&CB)) {
+		(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES, cbRead(&CB, &ET));
+//		recordedBuffer = cbRead(&CB, &ET);
+	} else {
+		(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES, emptyBuffer);
+//		recordedBuffer = emptyBuffer;
+	}
+
+//	(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES, recordedBuffer);
+
+
+	return ret;
 
 }
 JNIEXPORT void JNICALL Java_com_example_audiostream_MainActivity_setBuffer
   (JNIEnv * env, jclass cls, jshortArray lin, jint size) {
 
-	static short *bufferPtr;
-	bufferPtr = lin;
-	ET2.value[RECORDER_FRAMES] = *bufferPtr;
+	ElemType2 ET2;
+	memcpy(ET2.value, lin, RECORDER_FRAMES);
 	cbWrite2(&CB2, &ET2);
 
 }
