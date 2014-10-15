@@ -11,12 +11,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-
+ 
  
 public class MainActivity extends Activity {
  
 	private boolean isSendering;
-	private static int BUFFER_FRAME_SIZE = 1600;
+	private static int BUFFER_FRAME_SIZE = 16000;
 	short[] lin = new short [BUFFER_FRAME_SIZE];
 	short[] inbuffer  = new short[64];
 	short[] outbuffer = new short[128];
@@ -29,13 +29,13 @@ public class MainActivity extends Activity {
         createEngine();            
         createAudioRecorder();		
 		createBufferQueueAudioPlayer();
-           
+                  
         ((Button) findViewById(R.id.start)).setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
-            	
-            	isSendering = true;
+            	 
+            	isSendering = true; 
             	Log.d("start", "start button");
-            		  
+            		   
             	Thread t = new Thread() { 
             		@Override
             		 public void run() {             			            	            			                         			                            			                           			 
@@ -44,13 +44,13 @@ public class MainActivity extends Activity {
                     	playBack(lin, BUFFER_FRAME_SIZE);    
  
                     	while(isSendering) {
-                    		try {
-								Thread.sleep(100);
+                    		try { 
+								Thread.sleep(1000);
 							} catch (InterruptedException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							} 
-                    		setBuffer(getBuffer(),BUFFER_FRAME_SIZE * 2);
+                    		setBuffer(getBuffer(),BUFFER_FRAME_SIZE);
                     	}
             			Log.d("start", "record about to begin3");       	  		            			 
             	    } 
@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
             	t.start();                 	
             }
         });    
-                     
+                      
              
         ((Button) findViewById(R.id.stop)).setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
