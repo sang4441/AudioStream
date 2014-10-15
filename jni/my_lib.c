@@ -75,7 +75,7 @@ static int nextCount;
 //
 
 typedef struct ElemTypes {
-	short value[RECORDER_FRAMES];
+	short value[RECORDER_FRAMES * sizeof(short)];
 } ElemType;
 
 //struct ElemTypes *ElemType;
@@ -128,7 +128,7 @@ short * cbRead(CircularBuffer *cb, ElemType *elem) {
 }
 
 typedef struct ElemTypes2 {
-	short value[RECORDER_FRAMES];
+	short value[RECORDER_FRAMES * sizeof(short)];
 } ElemType2;
 
 //struct ElemTypes *ElemType;
@@ -186,40 +186,39 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
     assert(bq == bqPlayerBufferQueue);
     assert(NULL == context);
 
-    	ElemType ET2;
-		if (!cbIsEmpty(&CB2)) {
-			nextBuffer = cbRead(&CB2, &ET2);
-//			nextBuffer = recorderBuffer;
-			nextSize = RECORDER_FRAMES;
+	ElemType ET;
+	if (!cbIsEmpty(&CB)) {
+//		nextBuffer = cbRead(&CB, &ET);
+		nextBuffer = recorderBuffer;
+		nextSize = RECORDER_FRAMES;
 
-			recorderSize = RECORDER_FRAMES * sizeof(short);
-			recorderSR = SL_SAMPLINGRATE_16;
+		recorderSize = RECORDER_FRAMES * sizeof(short);
+		recorderSR = SL_SAMPLINGRATE_16;
 
-			if (recorderSR == SL_SAMPLINGRATE_16) {
-			   unsigned i;
-			   for (i = 0; i < recorderSize; i += 2 * sizeof(short)) {
-				   nextBuffer[i >> 2] = nextBuffer[i >> 1];
-			   }
-			   recorderSR = SL_SAMPLINGRATE_8;
-			   recorderSize >>= 1;
-			}
-
-		} else {
-			short emptyBuffer[RECORDER_FRAMES];
-			nextBuffer = (short *) hello;
-			nextSize = sizeof(hello);
+		if (recorderSR == SL_SAMPLINGRATE_16) {
+		   unsigned i;
+		   for (i = 0; i < recorderSize; i += 2 * sizeof(short)) {
+			   nextBuffer[i >> 2] = nextBuffer[i >> 1];
+		   }
+		   recorderSR = SL_SAMPLINGRATE_8;
+		   recorderSize >>= 1;
 		}
+	} else {
+		short emptyBuffer[RECORDER_FRAMES];
+		nextBuffer = (short *) hello;
+		nextSize = sizeof(hello);
+	}
 
-        SLresult result;
+	SLresult result;
 //		// enqueue another buffer
-		result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
+	result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
 
-		// the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
-		// which for this code example would indicate a programming error
+	// the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
+	// which for this code example would indicate a programming error
 
-		//__android_log_write(ANDROID_LOG_ERROR, "JNI", "playback after enqueue");
-		assert(SL_RESULT_SUCCESS == result);
-		(void)result;
+	//__android_log_write(ANDROID_LOG_ERROR, "JNI", "playback after enqueue");
+	assert(SL_RESULT_SUCCESS == result);
+	(void)result;
 
 }
 
@@ -227,20 +226,16 @@ void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
     assert(bq == recorderBufferQueue);
     assert(NULL == context);
-    // for streaming recording, here we would call Enqueue to give recorder the next buffer to fill
-    // but instead, this is a one-time buffer so we stop recording
-    SLresult result;
 
+    SLresult result;
 	ElemType ET;
 
 	short buffer[RECORDER_FRAMES];
-	memcpy(ET.value, recorderBuffer, RECORDER_FRAMES);
-
+	memmove(ET.value, recorderBuffer, RECORDER_FRAMES);
 	cbWrite(&CB, &ET);
 
     result = (*recorderBufferQueue)->Enqueue(recorderBufferQueue, recorderBuffer,
     	    		            RECORDER_FRAMES * sizeof(short));
-
 }
 
 

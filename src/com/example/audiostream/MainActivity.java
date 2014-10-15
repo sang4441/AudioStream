@@ -11,7 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-
+ 
 
 public class MainActivity extends Activity {
 
@@ -43,31 +43,25 @@ public class MainActivity extends Activity {
             	Thread t = new Thread() { 
             		@Override
             		 public void run() {  
-            			            	
-            			              
-            			                   
-            			                 
-            			  
+            			            	           			                           			                              			                                			   
             			Log.d("start", "record about to begin1");
             			lin = startRecording();
-
             			Log.d("start", "record about to begin2");
             			Log.d("start", "record about to begin3");       	  		
             			   
-                    	playBack(lin, BUFFER_FRAME_SIZE); 
-    
-            			
+                    	playBack(lin, BUFFER_FRAME_SIZE);    
+            			 
 //            			Log.d("start",  " record about to begin3");
             	    	while (isSendering) {
-            	    		Log.d("start", "record begin");
-            	    		try {
+//            	    		Log.d("start", "record begin");
+            	    		try {   
 								Thread.sleep(100);
 							} catch (InterruptedException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
-            	    		setBuffer(getBuffer(), BUFFER_FRAME_SIZE);
-//            	    		
+//            	    		setBuffer(getBuffer(), BUFFER_FRAME_SIZE);
+//            	    		  
 ////            	    		for (int i = 0; i < 100; i++) {
 ////            	    			lin = startRecording();
 ////            	    		}
@@ -112,16 +106,11 @@ public class MainActivity extends Activity {
             public void onClick(View view) {
             	Log.d("stop", "stop button");
             	Log.d("stop", "stop button finished");
-            	isSendering = false;
-            	 
-
+            	isSendering = false;           	
 				Log.d("start", "played");
             }
-        });
-        
-        
+        });               
     }
-
    
  
     @Override
