@@ -16,10 +16,11 @@ import android.widget.Button;
 public class MainActivity extends Activity {
 
 	private boolean isSendering;
-	private static int BUFFER_FRAME_SIZE = 16000;
+	private static int BUFFER_FRAME_SIZE = 1600;
 	short[] lin = new short [BUFFER_FRAME_SIZE];
 	short[] inbuffer  = new short[64];
 	short[] outbuffer = new short[128];
+	    
 	 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,23 +45,23 @@ public class MainActivity extends Activity {
             		 public void run() {  
             			            	
             			              
-            			                
+            			                   
             			                 
-            			 
+            			  
             			Log.d("start", "record about to begin1");
             			lin = startRecording();
 
             			Log.d("start", "record about to begin2");
             			Log.d("start", "record about to begin3");       	  		
-            			 
+            			   
                     	playBack(lin, BUFFER_FRAME_SIZE); 
-   
+    
             			
-//            			Log.d("start",  "record about to begin3");
+//            			Log.d("start",  " record about to begin3");
             	    	while (isSendering) {
             	    		Log.d("start", "record begin");
             	    		try {
-								Thread.sleep(1000);
+								Thread.sleep(100);
 							} catch (InterruptedException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
@@ -105,7 +106,7 @@ public class MainActivity extends Activity {
             	t.start();                 	
             }
         });
-                  
+                    
              
         ((Button) findViewById(R.id.stop)).setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
