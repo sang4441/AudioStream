@@ -59,7 +59,7 @@ static short sawtoothBuffer[SAWTOOTH_FRAMES];
 
 // 5 seconds of recorded audio at 16 kHz mono, 16-bit signed little endian
 //#define RECORDER_FRAMES (16000 * 5)
-#define RECORDER_FRAMES 8000//10ms
+#define RECORDER_FRAMES 1600//10ms
 static short recorderBuffer[RECORDER_FRAMES];
 static short bufferTmp[RECORDER_FRAMES];
 //static short recorderBuffer[160];
@@ -142,8 +142,6 @@ typedef struct CircularBuffers2 {
 } CircularBuffer2;
 
 CircularBuffer2 CB2;
-ElemType2 ET2 = {0};
-//struct CircularBuffers *CircularBuffer;
 
 void cbInit2(CircularBuffer2 *cb, int size) {
     cb->size  = size + 1; /* include empty elem */
@@ -186,40 +184,40 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
     assert(bq == bqPlayerBufferQueue);
     assert(NULL == context);
 
-        SLresult result;
-		assert(SL_RESULT_SUCCESS == result);
-		(void)result;
+	SLresult result;
+	assert(SL_RESULT_SUCCESS == result);
+	(void)result;
 
-		if (!cbIsEmpty(&CB)) {
-			ElemType ET;
-			nextBuffer = cbRead(&CB, &ET);
+	if (!cbIsEmpty2(&CB2)) {
+		ElemType2 ET2;
+		nextBuffer = cbRead(&CB2, &ET2);
 //			nextBuffer = recorderBuffer;
-			nextSize = RECORDER_FRAMES;
-			recorderSize = RECORDER_FRAMES * sizeof(short);
-			recorderSR = SL_SAMPLINGRATE_16;
+		nextSize = RECORDER_FRAMES;
+		recorderSize = RECORDER_FRAMES * sizeof(short);
+		recorderSR = SL_SAMPLINGRATE_16;
 
-			if (recorderSR == SL_SAMPLINGRATE_16) {
-			   unsigned i;
-			   for (i = 0; i < recorderSize; i += 2 * sizeof(short)) {
-				   nextBuffer[i >> 2] = nextBuffer[i >> 1];
-			   }
-			   recorderSR = SL_SAMPLINGRATE_8;
-			   recorderSize >>= 1;
-			}
-			__android_log_write(ANDROID_LOG_ERROR, "Tag", "not empty, read");
-		} else {
-			short empty[RECORDER_FRAMES];
-			nextBuffer = empty;
-			nextSize = RECORDER_FRAMES;
-			__android_log_write(ANDROID_LOG_ERROR, "Tag", "empty");
+		if (recorderSR == SL_SAMPLINGRATE_16) {
+		   unsigned i;
+		   for (i = 0; i < recorderSize; i += 2 * sizeof(short)) {
+			   nextBuffer[i >> 2] = nextBuffer[i >> 1];
+		   }
+		   recorderSR = SL_SAMPLINGRATE_8;
+		   recorderSize >>= 1;
 		}
-
-
+//		__android_log_write(ANDROID_LOG_ERROR, "Tag", "not empty, read");
+	} else {
+		short empty[RECORDER_FRAMES];
+		nextBuffer = (short *) hello;
+		nextSize = sizeof(hello);
+//		__android_log_write(ANDROID_LOG_ERROR, "Tag", "empty");
+	}
+//	__android_log_write(ANDROID_LOG_ERROR, "Tag", "here1");
+	result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
+//	__android_log_write(ANDROID_LOG_ERROR, "Tag", "here2");
 
 //		result = (*recorderBufferQueue)->Enqueue(recorderBufferQueue, recorderBuffer,
 //	    	    		            RECORDER_FRAMES * sizeof(short));
 
-		result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
 
 }
 
@@ -234,6 +232,7 @@ void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 
 
     ElemType ET;
+//    memcpy(ET.value, recorderBuffer, RECORDER_FRAMES* sizeof(short));
     memcpy(ET.value, recorderBuffer, RECORDER_FRAMES* sizeof(short));
 	cbWrite(&CB, &ET);
 //
@@ -502,17 +501,36 @@ JNIEXPORT jshortArray JNICALL Java_com_example_audiostream_MainActivity_startRec
 
 JNIEXPORT jshortArray JNICALL Java_com_example_audiostream_MainActivity_getBuffer
   (JNIEnv * env, jclass cls) {
+//
+//	if (!cbIsEmpty(&CB)) {
+//		ElemType ET;
+//		nextBuffer = cbRead(&CB, &ET);
+////			nextBuffer = recorderBuffer;
+//		nextSize = RECORDER_FRAMES;
+//		recorderSize = RECORDER_FRAMES * sizeof(short);
+//		recorderSR = SL_SAMPLINGRATE_16;
+//
+//		if (recorderSR == SL_SAMPLINGRATE_16) {
+//		   unsigned i;
+//		   for (i = 0; i < recorderSize; i += 2 * sizeof(short)) {
+//			   nextBuffer[i >> 2] = nextBuffer[i >> 1];
+//		   }
+//		   recorderSR = SL_SAMPLINGRATE_8;
+//		   recorderSize >>= 1;
+//		}
+//	} else {
+//		short empty[RECORDER_FRAMES];
+//		nextBuffer = empty;
+//		nextSize = RECORDER_FRAMES;
+//	}
 
 	short emptyBuffer[RECORDER_FRAMES];
-	short recordedBuffer[RECORDER_FRAMES];
+	jshortArray ret = (*env)->NewShortArray(env, RECORDER_FRAMES * sizeof(short));
 	ElemType ET;
-
-	jshortArray ret = (*env)->NewShortArray(env, RECORDER_FRAMES);
-
 	if (!cbIsEmpty(&CB)) {
-		(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES, cbRead(&CB, &ET));
+		(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES * sizeof(short), cbRead(&CB, &ET));
 	} else {
-		(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES, emptyBuffer);
+		(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES * sizeof(short), emptyBuffer);
 	}
 
 	return ret;
@@ -522,7 +540,12 @@ JNIEXPORT void JNICALL Java_com_example_audiostream_MainActivity_setBuffer
   (JNIEnv * env, jclass cls, jshortArray lin, jint size) {
 
 	ElemType2 ET2;
-	memcpy(ET2.value, lin, RECORDER_FRAMES);
-	cbWrite2(&CB2, &ET2);
+	memcpy(ET2.value, lin, RECORDER_FRAMES * sizeof(short));
+	cbWrite(&CB2, &ET2);
+//	__android_log_write(ANDROID_LOG_ERROR, "Tag", "set CB2");
+//
+//	ElemType2 ET2;
+//	memcpy(ET2.value, lin, RECORDER_FRAMES);
+//	cbWrite2(&CB2, &ET2);
 
 }
