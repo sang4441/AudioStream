@@ -186,115 +186,41 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
     assert(bq == bqPlayerBufferQueue);
     assert(NULL == context);
 
-    if (recorderSR == SL_SAMPLINGRATE_16) {
-  		   unsigned i;
-  		   for (i = 0; i < recorderSize; i += 2 * sizeof(short)) {
-  			   recorderBuffer[i >> 2] = recorderBuffer[i >> 1];
-  		   }
-  		   recorderSR = SL_SAMPLINGRATE_8;
-  		   recorderSize >>= 1;
-  	   }
-
-
-//     for streaming playback, replace this test by logic to find and fill the next buffer
-
-    __android_log_write(ANDROID_LOG_ERROR , "JNI", "playback callback");
-//
-//
-//	__android_log_write(ANDROID_LOG_ERROR , "JNI", "playback callback buffer not empty");
-//
-//
-//        char  buf[10];
-//    	sprintf(buf, "%d", CB.start);
-//    	__android_log_write(ANDROID_LOG_ERROR, "JNI", "playback before read");
-//    	__android_log_write(ANDROID_LOG_ERROR, "JNI" , buf);
-//
-//
-////    	*bufferTmp = cbRead(&CB, &ET).value[RECORDER_FRAMES];
-////        nextBuffer = bufferTmp;
-////    	*nextBuffer = cbRead(&CB, &ET).value;
-//
-////    	bufferTmp = cbRead(&CB, &ET).value;
-//
-//    	ElemType ET2;
-//		if (!cbIsEmpty(&CB2)) {
-//			nextBuffer = cbRead(&CB2, &ET2);
-//			nextSize = RECORDER_FRAMES;
-//		} else {
-//			nextBuffer = (short *) hello;
-//			nextSize = sizeof(hello);
-//		}
-//
-////    	strncpy(bufferTmp, cbRead(&CB, &ET).value, RECORDER_FRAMES);
-//
-//    	sprintf(buf, "%d", CB.start);
-//		__android_log_write(ANDROID_LOG_ERROR, "JNI", "playback after read");
-//		__android_log_write(ANDROID_LOG_ERROR, "JNI" , buf);
-
-
-
-
-
-
         SLresult result;
-//		// enqueue another buffer
-//		result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
-
-
-		// the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
-		// which for this code example would indicate a programming error
-
-		__android_log_write(ANDROID_LOG_ERROR, "JNI", "playback after enqueue");
 		assert(SL_RESULT_SUCCESS == result);
 		(void)result;
 
-//		result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
-
-		if (SL_RESULT_SUCCESS == result) {
-		__android_log_write(ANDROID_LOG_ERROR , "JNI", "recording successful");
-//		recorderSize = RECORDER_FRAMES * sizeof(short);
-//		recorderSR = SL_SAMPLINGRATE_16;
-	} else if (SL_RESULT_PARAMETER_INVALID == result) {
-		__android_log_write(ANDROID_LOG_ERROR , "JNI", "recording invalid");
-	} else {
-		__android_log_write(ANDROID_LOG_ERROR , "JNI", "recording insufficient");
-	}
-//    }
-
-
-
-//
-//    if (NULL != nextBuffer && 0 != nextSize) {
-//
-//    }
-
-
-
-
-
-
-
-//
-//	SLresult result;
-	result = (*recorderBufferQueue)->Enqueue(recorderBufferQueue, recorderBuffer,
-	    	    		            RECORDER_FRAMES * sizeof(short));
-
-	   if (SL_RESULT_SUCCESS == result) {
-			__android_log_write(ANDROID_LOG_INFO , "JNI", "recording successful");
+		if (!cbIsEmpty(&CB)) {
+			ElemType ET;
+			nextBuffer = cbRead(&CB, &ET);
+//			nextBuffer = recorderBuffer;
+			nextSize = RECORDER_FRAMES;
 			recorderSize = RECORDER_FRAMES * sizeof(short);
 			recorderSR = SL_SAMPLINGRATE_16;
-		} else if (SL_RESULT_PARAMETER_INVALID == result) {
-			__android_log_write(ANDROID_LOG_INFO , "JNI", "recording invalid");
+
+			if (recorderSR == SL_SAMPLINGRATE_16) {
+			   unsigned i;
+			   for (i = 0; i < recorderSize; i += 2 * sizeof(short)) {
+				   nextBuffer[i >> 2] = nextBuffer[i >> 1];
+			   }
+			   recorderSR = SL_SAMPLINGRATE_8;
+			   recorderSize >>= 1;
+			}
+			__android_log_write(ANDROID_LOG_ERROR, "Tag", "not empty, read");
 		} else {
-			__android_log_write(ANDROID_LOG_INFO , "JNI", "recording insufficient");
+			short empty[RECORDER_FRAMES];
+			nextBuffer = empty;
+			nextSize = RECORDER_FRAMES;
+			__android_log_write(ANDROID_LOG_ERROR, "Tag", "empty");
 		}
 
-//	__android_log_write(ANDROID_LOG_ERROR , "JNI", "PLayback recorderBuffer!");
-//	 nextBuffer = recorderBuffer;
-//	  nextSize = RECORDER_FRAMES;
-//
-//	SLresult result;
-//	result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
+
+
+//		result = (*recorderBufferQueue)->Enqueue(recorderBufferQueue, recorderBuffer,
+//	    	    		            RECORDER_FRAMES * sizeof(short));
+
+		result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
+
 }
 
 void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
@@ -304,106 +230,18 @@ void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
     // for streaming recording, here we would call Enqueue to give recorder the next buffer to fill
     // but instead, this is a one-time buffer so we stop recording
     SLresult result;
-//    result = (*recorderRecord)->SetRecordState(recorderRecord, SL_RECORDSTATE_RECORDING);
 
-//    __android_log_write(ANDROID_LOG_INFO, "JNI", "recording write, size ");
+
+
+    ElemType ET;
+    memcpy(ET.value, recorderBuffer, RECORDER_FRAMES* sizeof(short));
+	cbWrite(&CB, &ET);
 //
-//        char  buf[10];
-//    	sprintf(buf, "%d", CB.size);
-//    	__android_log_write(ANDROID_LOG_INFO, "JNI" , buf);
+//    nextBuffer = recorderBuffer;
+//    nextSize = RECORDER_FRAMES;
 
-//    char  buf[10];
-//	sprintf(buf, "%d", CB.end);
-//	__android_log_write(ANDROID_LOG_INFO, "JNI" , buf);
-//	__android_log_write(ANDROID_LOG_INFO, "JNI" , "herehre");
-//
-//
-//
-//	ElemType ET;
-//
-//	__android_log_write(ANDROID_LOG_INFO, "JNI" , "****");
-//	sprintf(buf, "%d", sizeof(ET.value));
-//	__android_log_write(ANDROID_LOG_INFO, "JNI" , buf);
-
-//	nextBuffer = recorderBuffer;
-//	nextSize = RECORDER_FRAMES;
-			// enqueue another buffer
-//	result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
-
-//	short buffer[RECORDER_FRAMES];
-//	*buffer = ET.value;
-//	memcpy(ET.value, recorderBuffer, RECORDER_FRAMES);
-//	strncpy(ET.value, recorderBuffer, RECORDER_FRAMES);
-//    puts(buffer);
-//    nextBuffer = ET.value;
-//	nextSize = sizeof(hello);
-
-//	result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
-//	puts(recorderBuffer);
-//	puts(ET.value);
-
-//	sprintf(buf, "%d", CB.end);
-//	__android_log_write(ANDROID_LOG_INFO, "JNI" , buf);
-//
-//	cbWrite(&CB, &ET);
-//
-//	__android_log_write(ANDROID_LOG_INFO, "JNI" , "****");
-//	sprintf(buf, "%d", sizeof(ET.value));
-//	__android_log_write(ANDROID_LOG_INFO, "JNI" , buf);
-//
-//	sprintf(buf, "%d", CB.end);
-//	__android_log_write(ANDROID_LOG_INFO, "JNI" , buf);
-
-//    result = (*recorderBufferQueue)->Enqueue(recorderBufferQueue, recorderBuffer,
-//    	    		            RECORDER_FRAMES * sizeof(short));
-
-
-//	__android_log_write(ANDROID_LOG_INFO, "JNI", "recording write, size ");
-//
-//	sprintf(buf, "%d", CB.size);
-//	__android_log_write(ANDROID_LOG_INFO, "JNI" , buf);
-//    if (recorderSR == SL_SAMPLINGRATE_16) {
-//   		   unsigned i;
-//   		   for (i = 0; i < recorderSize; i += 2 * sizeof(short)) {
-//   			   recorderBuffer[i >> 2] = recorderBuffer[i >> 1];
-//   		   }
-//   		   recorderSR = SL_SAMPLINGRATE_8;
-//   		   recorderSize >>= 1;
-//   	   }
-
-
-   //		// enqueue another buffer
-
-    if (recorderSR == SL_SAMPLINGRATE_16) {
-	   unsigned i;
-	   for (i = 0; i < recorderSize; i += 2 * sizeof(short)) {
-		   recorderBuffer[i >> 2] = recorderBuffer[i >> 1];
-	   }
-	   recorderSR = SL_SAMPLINGRATE_8;
-	   recorderSize >>= 1;
-    }
-
-    nextBuffer = recorderBuffer;
-    nextSize = RECORDER_FRAMES;
-
-//    nextBuffer = (short *) hello;
-//    nextSize = sizeof(hello);
-
-	result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
-
-
-//    if (SL_RESULT_SUCCESS == result) {
-//    	__android_log_write(ANDROID_LOG_INFO , "JNI", "recording successful");
-//        recorderSize = RECORDER_FRAMES * sizeof(short);
-//        recorderSR = SL_SAMPLINGRATE_16;
-//    } else if (SL_RESULT_PARAMETER_INVALID == result) {
-//    	__android_log_write(ANDROID_LOG_INFO , "JNI", "recording invalid");
-//    } else {
-//    	__android_log_write(ANDROID_LOG_INFO , "JNI", "recording insufficient");
-//    }
-
-
-//    result = (*recorderRecord)->SetRecordState(recorderRecord, SL_RECORDSTATE_STOPPED);
+	result = (*recorderBufferQueue)->Enqueue(recorderBufferQueue, recorderBuffer,
+    	    		            RECORDER_FRAMES * sizeof(short));
 
 }
 
@@ -558,42 +396,13 @@ JNIEXPORT void JNICALL Java_com_example_audiostream_MainActivity_playBack
 
 //	   nextBuffer = lin;
 //	   nextSize = size;
-//	  nextBuffer = (short *) hello;
+	  nextBuffer = (short *) hello;
 
-//    char  buf[10];
-//	sprintf(buf, "%d", CB.start);
-//	__android_log_write(ANDROID_LOG_ERROR, "JNI", "playback read");
-//	__android_log_write(ANDROID_LOG_ERROR, "JNI" , buf);
-//
-//
-//	  if (!cbIsEmpty(&CB)) {
-//
-//		  __android_log_write(ANDROID_LOG_INFO , "JNI", "playback buffer not empty");
-////		  *bufferTmp = cbRead(&CB, &ET).value[RECORDER_FRAMES];
-//		  ElemType ET;
-//		  nextBuffer = cbRead(&CB, &ET);
-//	  }
 	  nextSize = RECORDER_FRAMES;
 
 
-//	  sprintf(buf, "%d", CB.start);
-//	__android_log_write(ANDROID_LOG_ERROR, "JNI" , buf);
-
-	   nextCount = 1;
-	   if (nextSize > 0) {
-		   __android_log_write(ANDROID_LOG_ERROR , "JNI", "playback start recording");
-			// here we only enqueue one buffer because it is a long clip,
-			// but for streaming playback we would typically enqueue at least 2 buffers to start
-
-			SLresult result;
-			result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
-
-//			result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
-
-//			if (SL_RESULT_SUCCESS != result) {
-//				return JNI_FALSE;
-//			}
-		}
+		SLresult result;
+		result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
 
 }
 
@@ -669,68 +478,22 @@ JNIEXPORT jshortArray JNICALL Java_com_example_audiostream_MainActivity_startRec
 
 	    // enqueue an empty buffer to be filled by the recorder
 	    // (for streaming recording, we would enqueue at least 2 empty buffers to start things off)
-//	    short currentBuffer[64];
-//
-//	    int i;
-//	    for (i = 0; i < 64; i++) {
+
 	    __android_log_write(ANDROID_LOG_INFO , "JNI", "initial recording starting");
 
 		result = (*recorderBufferQueue)->Enqueue(recorderBufferQueue, recorderBuffer,
 	    		            RECORDER_FRAMES * sizeof(short));
-//	    	currentBuffer[i] = *recorderBuffer;
-//	    }
-
-//		__android_log_write(ANDROID_LOG_INFO, "JNI", "recording write, size ");
-//		char  buf[10];
-//		sprintf(buf, "%d", CB.size);
-//		__android_log_write(ANDROID_LOG_INFO, "JNI" , buf);
-
-
-//
-//		if (SL_RESULT_SUCCESS == result) {
-//			__android_log_write(ANDROID_LOG_INFO , "JNI", "recording successful");
-////		        recorderSize = RECORDER_FRAMES * sizeof(short);
-////		        recorderSR = SL_SAMPLINGRATE_16;
-//		} else if (SL_RESULT_PARAMETER_INVALID == result) {
-//			__android_log_write(ANDROID_LOG_INFO , "JNI", "recording invalid");
-//		} else {
-//			__android_log_write(ANDROID_LOG_INFO , "JNI", "recording insufficient");
-//		}
-
 
 	    // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
 	    // which for this code example would indicate a programming error
 	    assert(SL_RESULT_SUCCESS == result);
 	    (void)result;
 
-
 	    __android_log_write(ANDROID_LOG_INFO , "JNI", "set recording");
 		// start recording
 		result = (*recorderRecord)->SetRecordState(recorderRecord, SL_RECORDSTATE_RECORDING);
 		assert(SL_RESULT_SUCCESS == result);
 		(void)result;
-
-		__android_log_write(ANDROID_LOG_INFO, "JNI", "recording write, size");
-
-//		char  buf[10];
-//		sprintf(buf, "%d", CB.size);
-//		__android_log_write(ANDROID_LOG_INFO, "JNI" , buf);
-
-
-//		result = (*recorderRecord)->SetRecordState(recorderRecord, SL_RECORDSTATE_RECORDING);
-//				assert(SL_RESULT_SUCCESS == result);
-//				(void)result;
-
-
-	//	    recorderBuffer = (short *) hello;
-	//	    RECORDER_FRAMES = sizeof(hello);
-
-	//	    jshortArray ret = (*env)->NewShortArray(env, RECORDER_FRAMES);
-	//	    		(*env)->SetShortArrayRegion(env, ret, 0, sizeof(hello), (short *) hello);
-	//	    	    return ret;
-
-
-
 
 		jshortArray ret = (*env)->NewShortArray(env, RECORDER_FRAMES);
 			(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES, recorderBuffer);
@@ -748,14 +511,9 @@ JNIEXPORT jshortArray JNICALL Java_com_example_audiostream_MainActivity_getBuffe
 
 	if (!cbIsEmpty(&CB)) {
 		(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES, cbRead(&CB, &ET));
-//		recordedBuffer = cbRead(&CB, &ET);
 	} else {
 		(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES, emptyBuffer);
-//		recordedBuffer = emptyBuffer;
 	}
-
-//	(*env)->SetShortArrayRegion(env, ret, 0, RECORDER_FRAMES, recordedBuffer);
-
 
 	return ret;
 

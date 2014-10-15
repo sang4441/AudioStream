@@ -20,8 +20,8 @@ public class MainActivity extends Activity {
 	short[] lin = new short [BUFFER_FRAME_SIZE];
 	short[] inbuffer  = new short[64];
 	short[] outbuffer = new short[128];
-	   
-    @Override    
+	     
+    @Override     
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);     
@@ -29,7 +29,7 @@ public class MainActivity extends Activity {
         createEngine();            
         createAudioRecorder();		
 		createBufferQueueAudioPlayer();
-       
+        
         ((Button) findViewById(R.id.start)).setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
             	
@@ -41,20 +41,21 @@ public class MainActivity extends Activity {
             		 public void run() {             			            	            			                         			                            			                           			 
             			Log.d("start", "record about to begin1");
             			lin = startRecording();
+                    	playBack(lin, BUFFER_FRAME_SIZE);    
+ 
             			Log.d("start", "record about to begin3");       	  		            			 
             	    }
             	};
             	t.start();                 	
             }
         });    
-                  
+                     
              
         ((Button) findViewById(R.id.stop)).setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
             	Log.d("stop", "stop button");
             	Log.d("stop", "stop button finished"); 
             	isSendering = false;       
-            	playBack(lin, BUFFER_FRAME_SIZE);    
 
 				Log.d("start", "played");
             }
